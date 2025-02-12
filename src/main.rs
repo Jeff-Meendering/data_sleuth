@@ -335,13 +335,14 @@ fn process_file_write(
                 line_to_check.contains(&k.to_lowercase())
             }
         }) {
+            let match_index = global_match_counter.fetch_add(1, Ordering::SeqCst) + 1;
             {
                 let mut out = output_file.lock().unwrap();
-                writeln!(out, "{}", line)?;
+                writeln!(out, "{}. {}: {}", match_index, file_path.display(), line)?;
                 out.flush().ok();
             }
             match_count += 1;
-            let _ = tx.send(SearchMessage::Counter(global_match_counter.fetch_add(1, Ordering::SeqCst) + 1));
+            let _ = tx.send(SearchMessage::Counter(match_index));
         }
     }
     Ok(match_count)
